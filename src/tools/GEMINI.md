@@ -1,0 +1,9 @@
+# Tools Directory
+
+This directory contains the logic for individual MCP tools.
+
+## Key Files
+- `google_nearby.py`: Implements the `search_nearby` functionality. It handles:
+    - Environment configuration reading.
+    - Google Maps Places API interaction.
+    - Mocking logic for testing (controlled by `MOCK_GOOGLE_API`).

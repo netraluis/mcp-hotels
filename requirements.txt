@@ -1,0 +1,4 @@
+fastmcp
+googlemaps
+python-dotenv
+uvicorn
