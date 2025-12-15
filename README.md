@@ -6,6 +6,7 @@ A scalable, Dockerized Model Context Protocol (MCP) server written in Python. It
 
 - **Google Nearby Search Tool**: Find places by coordinates, radius, and keyword.
 - **Geocoding Tool**: Convert addresses (e.g., "Eiffel Tower") into coordinates.
+- **Weather Tool**: Get current weather and forecast via Meteoblue.
 - **Mocking Support**: Disable real API calls for testing/dev using an environment variable.
 - **Dockerized**: Ready for local deployment and platforms like Dokploy.
 - **Scalable Structure**: Designed to easily add more tools.
@@ -15,6 +16,7 @@ A scalable, Dockerized Model Context Protocol (MCP) server written in Python. It
 - Python 3.11+
 - Docker & Docker Compose
 - Google Maps API Key (Places API enabled)
+- Meteoblue API Key (optional, for weather)
 
 ## Setup
 
@@ -28,7 +30,9 @@ cp .env.example .env
 
 Edit `.env` and fill in your details:
 - `GOOGLE_API_KEY`: Your Google Maps API Key.
-- `MOCK_GOOGLE_API`: Set to `true` to use hardcoded responses (saves credits), `false` for real API calls.
+- `METEOBLUE_API_KEY`: Your Meteoblue API Key (or use mock).
+- `MOCK_GOOGLE_API`: Set to `true` to use hardcoded responses.
+- `MOCK_WEATHER_API`: Set to `true` to mock weather data.
 - `TRANSPORT`: `sse` for HTTP server (Docker), `stdio` for CLI.
 
 ### 2. Local Installation (Python)

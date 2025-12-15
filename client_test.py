@@ -6,6 +6,7 @@ from mcp.client.session import ClientSession
 async def main():
     # URL of the SSE endpoint (ensure server is running on port 8000)
     url = "http://localhost:8000/sse"
+    # url = "https://mcp-openai.netraluis.xyz/sse"
     print(f"Connecting to {url}...")
     
     try:
@@ -57,8 +58,23 @@ async def main():
                     print("\n--- Search Result ---")
                     for content in search_result.content:
                         print(content.text)
+
+                    # 3. Test Weather using same coordinates
+                    print(f"\n--- 3. Testing 'get_weather' for ({lat}, {lng}) ---")
+                    # Ensure MOCK_WEATHER_API is true in server env if no key
+                    weather_args = {
+                        "latitude": lat,
+                        "longitude": lng
+                    }
+                    print(f"Calling tool with args: {weather_args}")
+                    
+                    weather_result = await session.call_tool("get_weather", arguments=weather_args)
+                    print("\n--- Weather Result ---")
+                    for content in weather_result.content:
+                        print(content.text)
+
                 else:
-                    print("\nCould not parse coordinates from response. Skipping search test.")
+                    print("\nCould not parse coordinates from response. Skipping search and weather test.")
                         
     except Exception as e:
         print(f"\nError occurred: {e}")

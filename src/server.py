@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
 from tools.google_nearby import get_nearby_places
 from tools.geocoding import geocode_address
+from tools.weather import weather_service
 import os
 import logging
 
@@ -10,6 +11,18 @@ logging.basicConfig(level=logging.INFO)
 
 # Initialize FastMCP server
 mcp = FastMCP("Google Nearby Search MCP")
+
+@mcp.tool()
+async def get_weather(latitude: float, longitude: float) -> str:
+    """
+    Get the current weather and forecast for a specific location (latitude/longitude).
+    Returns a readable string with temperature, wind, etc.
+    """
+    try:
+        data = await weather_service.get_weather(latitude, longitude)
+        return weather_service.format_weather_for_context(data)
+    except Exception as e:
+        return f"Failed to get weather: {e}"
 
 @mcp.tool()
 def get_coordinates(address: str) -> str:
