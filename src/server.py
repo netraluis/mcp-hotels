@@ -1,9 +1,18 @@
 from fastmcp import FastMCP
 from tools.google_nearby import get_nearby_places
 import os
+import logging
+
+# Configurar logging para debugging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Initialize FastMCP server
-mcp = FastMCP("Google Nearby Search MCP", cors_allow_origins=["*"])
+logger.info("Initializing FastMCP server...")
+mcp = FastMCP("Google Nearby Search MCP")
 
 @mcp.tool()
 def search_nearby(latitude: float, longitude: float, radius: int = 1000, keyword: str = "hotel") -> str:
@@ -16,6 +25,7 @@ def search_nearby(latitude: float, longitude: float, radius: int = 1000, keyword
         radius: Search radius in meters (default 1000).
         keyword: Type of place to search for (default "hotel").
     """
+    logger.info(f"search_nearby called: lat={latitude}, lng={longitude}, radius={radius}, keyword={keyword}")
     results = get_nearby_places(latitude, longitude, radius, keyword)
     
     # Format results as a readable string
@@ -31,23 +41,33 @@ def search_nearby(latitude: float, longitude: float, radius: int = 1000, keyword
         
     return "\n".join(formatted_results)
 
+logger.info("Tool 'search_nearby' registered successfully")
+
 if __name__ == "__main__":
     # Determine transport mode from environment
     # 'sse' for Docker/Web (Dokploy), 'stdio' for CLI/Local agents
-    transport_mode = os.environ.get("TRANSPORT", "stdio").lower()
+    transport_mode = os.environ.get("TRANSPORT", "sse").lower()
     
-    print(f"Starting MCP Server with transport: {transport_mode}")
+    logger.info(f"Starting MCP Server with transport: {transport_mode}")
+    logger.info(f"Environment variables:")
+    logger.info(f"  TRANSPORT={transport_mode}")
+    logger.info(f"  HOST={os.environ.get('HOST', '0.0.0.0')}")
+    logger.info(f"  PORT={os.environ.get('PORT', '8000')}")
     
     try:
         if transport_mode == "sse":
             host = os.environ.get("HOST", "0.0.0.0")
             port = int(os.environ.get("PORT", "8000"))
+            logger.info(f"Starting SSE server on {host}:{port}")
+            logger.info(f"SSE endpoint will be available at: http://{host}:{port}/sse")
             # Run as an SSE server
             mcp.run(transport="sse", host=host, port=port)
         else:
+            logger.info("Starting stdio server")
             # Default to stdio
             mcp.run()
     except Exception as e:
         import traceback
+        logger.error(f"Server crashed: {e}")
         traceback.print_exc()
-        print(f"Server crashed: {e}")
+        raise
