@@ -10,3 +10,6 @@ This directory contains the logic for individual MCP tools.
 - `geocoding.py`: Implements the `get_coordinates` functionality. It handles:
     - Google Maps Geocoding API interaction.
     - Converting addresses to latitude/longitude.
+- `weather.py`: Implements the `get_weather` functionality. It handles:
+    - Meteoblue API interaction.
+    - Formatting weather data into readable text.
