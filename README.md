@@ -5,6 +5,7 @@ A scalable, Dockerized Model Context Protocol (MCP) server written in Python. It
 ## Features
 
 - **Google Nearby Search Tool**: Find places by coordinates, radius, and keyword.
+- **Geocoding Tool**: Convert addresses (e.g., "Eiffel Tower") into coordinates.
 - **Mocking Support**: Disable real API calls for testing/dev using an environment variable.
 - **Dockerized**: Ready for local deployment and platforms like Dokploy.
 - **Scalable Structure**: Designed to easily add more tools.
@@ -94,9 +95,10 @@ The server will be available at `http://localhost:8000/sse` (depending on FastMC
 
 ## Logic Flow
 
-1.  **Request**: Agent sends a request to `search_nearby` tool with `latitude`, `longitude`, `radius`, and `keyword`.
-2.  **Mock Check**: System checks `MOCK_GOOGLE_API`.
+1.  **Geocoding (Optional)**: If the agent has a place name, it calls `get_coordinates` to get latitude/longitude.
+2.  **Search Request**: Agent sends a request to `search_nearby` tool with `latitude`, `longitude`, `radius`, and `keyword`.
+3.  **Mock Check**: System checks `MOCK_GOOGLE_API`.
     - If `true`: Returns hardcoded fake data.
     - If `false`: Calls Google Maps API.
-3.  **Response**: Formats the list of places into a human-readable string and returns it to the agent.
+4.  **Response**: Formats the list of places into a human-readable string and returns it to the agent.
 # mcp-hotels

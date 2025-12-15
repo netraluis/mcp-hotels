@@ -1,10 +1,10 @@
 import asyncio
+import re
 from mcp.client.sse import sse_client
 from mcp.client.session import ClientSession
 
 async def main():
-    ## URL of the SSE endpoint (ensure server is running on port 8000)
-    # url = "https://mcp-openai.netraluis.xyz/sse"
+    # URL of the SSE endpoint (ensure server is running on port 8000)
     url = "http://localhost:8000/sse"
     print(f"Connecting to {url}...")
     
@@ -23,27 +23,42 @@ async def main():
                 for tool in tools_result.tools:
                     print(f"Tool: {tool.name}")
                     print(f"Description: {tool.description}")
-                    print(f"Schema: {tool.inputSchema}")
                 
-                # Test the 'search_nearby' tool
-                print("\n--- Testing 'search_nearby' Tool (Mock Mode) ---")
-                # Ensure MOCK_GOOGLE_API is true in your server env for this to work without credits
-                args = {
-                    "latitude": 42.55192485018038, 
-                    "longitude": 1.5123403642939872,
-                    "radius": 500,
-                    "keyword": "restaurant"
-                }
-                print(f"Calling tool with args: {args}")
-                result = await session.call_tool("search_nearby", arguments=args)
+                # 1. Test Geocoding
+                target_place = "Empire State Building"
+                print(f"\n--- 1. Testing 'get_coordinates' for '{target_place}' ---")
+                geo_result = await session.call_tool("get_coordinates", arguments={"address": target_place})
                 
-                print("\n--- Tool Result ---")
-                # content is a list of TextContent or ImageContent
-                for content in result.content:
-                    if hasattr(content, 'text'):
+                geo_text = geo_result.content[0].text
+                print(f"Result: {geo_text}")
+                
+                # Parse coordinates from the text response for the next step
+                # Expected format: "Coordinates for '...': Latitude 40.748817, Longitude -73.985428"
+                lat_match = re.search(r"Latitude ([0-9.-]+)", geo_text)
+                lng_match = re.search(r"Longitude ([0-9.-]+)", geo_text)
+                
+                if lat_match and lng_match:
+                    lat = float(lat_match.group(1))
+                    lng = float(lng_match.group(1))
+                    print(f"-> Parsed: Lat={lat}, Lng={lng}")
+                    
+                    # 2. Test Nearby Search using obtained coordinates
+                    print(f"\n--- 2. Testing 'search_nearby' around {target_place} ---")
+                    search_args = {
+                        "latitude": lat, 
+                        "longitude": lng,
+                        "radius": 500,
+                        "keyword": "pizza"
+                    }
+                    print(f"Calling tool with args: {search_args}")
+                    
+                    search_result = await session.call_tool("search_nearby", arguments=search_args)
+                    
+                    print("\n--- Search Result ---")
+                    for content in search_result.content:
                         print(content.text)
-                    else:
-                        print(content)
+                else:
+                    print("\nCould not parse coordinates from response. Skipping search test.")
                         
     except Exception as e:
         print(f"\nError occurred: {e}")

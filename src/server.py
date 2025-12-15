@@ -1,18 +1,28 @@
 from fastmcp import FastMCP
 from tools.google_nearby import get_nearby_places
+from tools.geocoding import geocode_address
 import os
 import logging
 
-# Configurar logging para debugging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Configure logger
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # Initialize FastMCP server
-logger.info("Initializing FastMCP server...")
 mcp = FastMCP("Google Nearby Search MCP")
+
+@mcp.tool()
+def get_coordinates(address: str) -> str:
+    """
+    Convert an address or place name (e.g., "Eiffel Tower", "New York City") into latitude and longitude coordinates.
+    Use this tool BEFORE searching for nearby places if you only have a name/address.
+    """
+    result = geocode_address(address)
+    
+    if isinstance(result, dict):
+        return f"Coordinates for '{address}': Latitude {result['lat']}, Longitude {result['lng']}"
+    else:
+        return str(result)
 
 @mcp.tool()
 def search_nearby(latitude: float, longitude: float, radius: int = 1000, keyword: str = "hotel") -> str:
