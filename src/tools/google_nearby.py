@@ -72,4 +72,5 @@ def get_nearby_places(
         
     except Exception as e:
         print(f"Error querying Google Maps API: {e}")
-        return []
+        # Re-raise exception to alert the client of the error
+        raise RuntimeError(f"Google Maps API failed: {e}")

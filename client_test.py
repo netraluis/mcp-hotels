@@ -28,13 +28,12 @@ async def main():
                 print("\n--- Testing 'search_nearby' Tool (Mock Mode) ---")
                 # Ensure MOCK_GOOGLE_API is true in your server env for this to work without credits
                 args = {
-                    "latitude": 40.7128, 
-                    "longitude": -74.0060,
+                    "latitude": 42.55192485018038, 
+                    "longitude": 1.5123403642939872,
                     "radius": 500,
-                    "keyword": "pizza"
+                    "keyword": "restaurant"
                 }
                 print(f"Calling tool with args: {args}")
-                
                 result = await session.call_tool("search_nearby", arguments=args)
                 
                 print("\n--- Tool Result ---")
