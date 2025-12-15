@@ -3,7 +3,7 @@ from mcp.client.sse import sse_client
 from mcp.client.session import ClientSession
 
 async def main():
-    # URL of the SSE endpoint (ensure server is running on port 8000)
+    ## URL of the SSE endpoint (ensure server is running on port 8000)
     # url = "https://mcp-openai.netraluis.xyz/sse"
     url = "http://localhost:8000/sse"
     print(f"Connecting to {url}...")
