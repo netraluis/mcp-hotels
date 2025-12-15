@@ -3,7 +3,7 @@ from tools.google_nearby import get_nearby_places
 import os
 
 # Initialize FastMCP server
-mcp = FastMCP("Google Nearby Search MCP")
+mcp = FastMCP("Google Nearby Search MCP", cors_allow_origins=["*"])
 
 @mcp.tool()
 def search_nearby(latitude: float, longitude: float, radius: int = 1000, keyword: str = "hotel") -> str:
