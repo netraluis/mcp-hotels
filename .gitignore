@@ -1,0 +1,35 @@
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+env/
+venv/
+
+# Packaging / Builds
+build/
+dist/
+
+# Testing / Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Type checking / Lint
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Env files / Secrets
+.env
+.env.*
+
+# Logs
+*.log
+logs/
