@@ -9,6 +9,10 @@ services:
       - PORT=8000
       - HOST=0.0.0.0
       - TRANSPORT=sse
+    networks:
+      mcp-network:
+        aliases:
+          - mcp-server
     restart: always
 
   auth-proxy:
@@ -22,7 +26,14 @@ services:
     environment:
       - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}
     # Substitute only the auth token to avoid clobbering Nginx $-vars
-    command: /bin/sh -c "envsubst '$$MCP_AUTH_TOKEN' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    # Sleep added to wait for mcp-server DNS
+    command: /bin/sh -c "sleep 5 && envsubst '$$MCP_AUTH_TOKEN' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
     depends_on:
       - mcp-server
+    networks:
+      - mcp-network
     restart: always
+
+networks:
+  mcp-network:
+    driver: bridge
