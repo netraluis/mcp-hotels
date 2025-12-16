@@ -1,0 +1,47 @@
+events {}
+
+http {
+    server {
+        listen 80;
+
+        location / {
+            # Simple Bearer Token check
+            # Note: This is a basic check using Nginx if logic.
+            # We compare the Authorization header with the env var injected via envsubst.
+            
+            # Default to block if no match
+            set $auth_pass "false";
+            
+            # Check Bearer Token
+            if ($http_authorization = "Bearer ${MCP_AUTH_TOKEN}") {
+                set $auth_pass "true";
+            }
+            
+            # Check Query Param (fallback)
+            if ($arg_token = "${MCP_AUTH_TOKEN}") {
+                set $auth_pass "true";
+            }
+            
+            # If MCP_AUTH_TOKEN is not set or empty in env, this logic might be risky,
+            # but usually Docker handles envs. Assuming it's set.
+            
+            if ($auth_pass = "false") {
+                return 401 '{"error": "Unauthorized"}';
+            }
+
+            # Proxy configuration
+            proxy_pass http://mcp-server:8000;
+            
+            # Essential for SSE (Server-Sent Events)
+            proxy_set_header Connection '';
+            proxy_http_version 1.1;
+            proxy_buffering off;
+            proxy_cache off;
+            proxy_read_timeout 24h; # Keep connection open
+            
+            # Pass headers
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+}

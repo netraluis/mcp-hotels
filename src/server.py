@@ -3,14 +3,22 @@ from tools.google_nearby import get_nearby_places
 from tools.geocoding import geocode_address
 from tools.weather import weather_service
 import os
-import logging
+import logging # Mantener para logs generales del servidor
 
 # Configure logger
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 # Initialize FastMCP server
-mcp = FastMCP("Google Nearby Search MCP")
+mcp = FastMCP(
+    name="Google Nearby Search MCP",
+    version="1.0.0",
+    debug=True,
+    strict_input_validation=False  # Disable strict validation to avoid parameter issues
+)
+
+# --- OLD AUTHENTICATION MIDDLEWARE REMOVED ---
+# La clase ASGIAuthMiddleware y su registro han sido eliminados.
 
 @mcp.tool()
 async def get_weather(latitude: float, longitude: float) -> str:
@@ -67,8 +75,6 @@ def search_nearby(latitude: float, longitude: float, radius: int = 1000, keyword
 logger.info("Tool 'search_nearby' registered successfully")
 
 if __name__ == "__main__":
-    # Determine transport mode from environment
-    # 'sse' for Docker/Web (Dokploy), 'stdio' for CLI/Local agents
     transport_mode = os.environ.get("TRANSPORT", "sse").lower()
     
     logger.info(f"Starting MCP Server with transport: {transport_mode}")
@@ -83,11 +89,9 @@ if __name__ == "__main__":
             port = int(os.environ.get("PORT", "8000"))
             logger.info(f"Starting SSE server on {host}:{port}")
             logger.info(f"SSE endpoint will be available at: http://{host}:{port}/sse")
-            # Run as an SSE server
             mcp.run(transport="sse", host=host, port=port)
         else:
             logger.info("Starting stdio server")
-            # Default to stdio
             mcp.run()
     except Exception as e:
         import traceback

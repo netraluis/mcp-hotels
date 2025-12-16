@@ -3,8 +3,26 @@ services:
     build: .
     env_file:
       - .env
+    expose:
+      - "8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - TRANSPORT=sse
+    restart: always
+
+  auth-proxy:
+    image: nginx:alpine
     ports:
-      - "8000:8000"
+      - "8080:80"
     volumes:
-      - ./src:/app/src
+      - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+    env_file:
+      - .env
+    environment:
+      - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}
+    # Substitute only the auth token to avoid clobbering Nginx $-vars
+    command: /bin/sh -c "envsubst '$$MCP_AUTH_TOKEN' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    depends_on:
+      - mcp-server
     restart: always

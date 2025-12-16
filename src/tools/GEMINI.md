@@ -3,13 +3,12 @@
 This directory contains the logic for individual MCP tools.
 
 ## Key Files
-- `google_nearby.py`: Implements the `search_nearby` functionality. It handles:
-    - Environment configuration reading.
-    - Google Maps Places API interaction.
-    - Mocking logic for testing (controlled by `MOCK_GOOGLE_API`).
-- `geocoding.py`: Implements the `get_coordinates` functionality. It handles:
-    - Google Maps Geocoding API interaction.
-    - Converting addresses to latitude/longitude.
-- `weather.py`: Implements the `get_weather` functionality. It handles:
-    - Meteoblue API interaction.
-    - Formatting weather data into readable text.
+- `google_nearby.py`: Implements the `search_nearby` functionality using Google Places API.
+    - Handles environment configuration and API calls.
+    - Includes mocking support via `MOCK_GOOGLE_API`.
+- `geocoding.py`: Implements the `get_coordinates` functionality using Google Geocoding API.
+    - Converts addresses to latitude/longitude.
+- `weather.py`: Implements the `get_weather` functionality using Meteoblue API.
+    - Fetches current weather and forecast.
+    - Formats data into a readable string for the LLM context.
+    - Includes mocking support via `MOCK_WEATHER_API`.

@@ -1,24 +1,26 @@
-# Google Nearby Search MCP Server
+# Google Nearby Search MCP Server (with Auth & Weather)
 
-A scalable, Dockerized Model Context Protocol (MCP) server written in Python. It wraps the Google Maps Nearby Search API, allowing AI agents to find places (hotels, restaurants, etc.) based on location.
+A scalable, Dockerized Model Context Protocol (MCP) server written in Python. It wraps the Google Maps APIs (Nearby Search, Geocoding) and Meteoblue Weather API, allowing AI agents to find places and check the weather.
+
+It includes a robust **Nginx Sidecar** for Bearer Token Authentication, ensuring security without interfering with the SSE (Server-Sent Events) streaming protocol.
 
 ## Features
 
 - **Google Nearby Search Tool**: Find places by coordinates, radius, and keyword.
 - **Geocoding Tool**: Convert addresses (e.g., "Eiffel Tower") into coordinates.
 - **Weather Tool**: Get current weather and forecast via Meteoblue.
-- **Mocking Support**: Disable real API calls for testing/dev using an environment variable.
+- **Authentication**: Nginx-based Bearer Token protection (Forward Auth compatible).
+- **Mocking Support**: Disable real API calls for testing/dev using environment variables.
 - **Dockerized**: Ready for local deployment and platforms like Dokploy.
-- **Scalable Structure**: Designed to easily add more tools.
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.11+ (for local dev)
 - Docker & Docker Compose
-- Google Maps API Key (Places API enabled)
+- Google Maps API Key (Places API & Geocoding API enabled)
 - Meteoblue API Key (optional, for weather)
 
-## Setup
+## Setup & Configuration
 
 ### 1. Environment Variables
 
@@ -29,80 +31,80 @@ cp .env.example .env
 ```
 
 Edit `.env` and fill in your details:
-- `GOOGLE_API_KEY`: Your Google Maps API Key.
-- `METEOBLUE_API_KEY`: Your Meteoblue API Key (or use mock).
-- `MOCK_GOOGLE_API`: Set to `true` to use hardcoded responses.
-- `MOCK_WEATHER_API`: Set to `true` to mock weather data.
-- `TRANSPORT`: `sse` for HTTP server (Docker), `stdio` for CLI.
 
-### 2. Local Installation (Python)
+| Variable | Description |
+| :--- | :--- |
+| `GOOGLE_API_KEY` | Your Google Maps API Key. |
+| `METEOBLUE_API_KEY` | Your Meteoblue API Key (optional). |
+| `MCP_AUTH_TOKEN` | **Secret token** for Bearer Authentication (e.g., `my-secret-token`). |
+| `MOCK_GOOGLE_API` | Set to `true` to use hardcoded Google responses (saves credits). |
+| `MOCK_WEATHER_API` | Set to `true` to mock weather data. |
+| `TRANSPORT` | `sse` for HTTP server (Docker), `stdio` for CLI. |
+| `HOST` / `PORT` | Binding configuration (default 0.0.0.0:8000). |
 
-It is highly recommended to use a virtual environment.
+## Architecture
 
-```bash
-# Create a virtual environment
-python3 -m venv venv
+This project uses a **Sidecar Pattern** for authentication:
 
-# Activate the virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-# .\venv\Scripts\activate
+1.  **Nginx (Port 8080):** Public entry point. Handles SSL (if configured) and **Bearer Token Authentication**. If the token is valid, it proxies the request to the Python backend.
+2.  **Python MCP Server (Port 8000):** Internal logic. Handles MCP protocol, Tools, and API calls. It runs without authentication logic to ensure SSE stability.
 
-# Install dependencies
-pip install -r requirements.txt
+## Running the Project
 
-# Set PYTHONPATH to include src directory (Important!)
-export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+### Option A: Docker Deployment (Recommended with Auth)
 
-# Option 1: Run with FastMCP CLI (Recommended for SSE/HTTP)
-# This handles the server setup robustly.
-fastmcp run src/server.py --transport sse --host 0.0.0.0 --port 8000
+This runs the full stack: Nginx (Auth) + Python (Logic).
 
-# Option 2: Run the script directly (CLI/Stdio)
-export TRANSPORT=stdio
-python src/server.py
+1.  Build and start the containers:
+    ```bash
+    docker-compose up --build -d
+    ```
 
-# Option 3: Run the script directly (SSE)
-# Ensure you set PYTHONPATH first
-export TRANSPORT=sse
-export HOST=0.0.0.0
-export PORT=8000
-python src/server.py
-```
+2.  Access the SSE endpoint at **Port 8080**:
+    *   **URL:** `http://localhost:8080/sse`
+    *   **Auth:** Required. Send header `Authorization: Bearer <MCP_AUTH_TOKEN>` or URL param `?token=<MCP_AUTH_TOKEN>`.
 
-### 3. Docker Deployment (Local)
+3.  Test with the client script:
+    ```bash
+    # Ensure local python env is set
+    source venv/bin/activate 
+    export MCP_AUTH_TOKEN=your_token_from_env
+    python client_test.py
+    ```
 
-Build and run using Docker Compose:
+### Option B: Local Python Dev (No Auth)
 
-```bash
-docker-compose up --build
-```
+Run only the Python backend directly. This skips Nginx, so **authentication is disabled**.
 
-The server will be available at `http://localhost:8000/sse` (depending on FastMCP default SSE path).
+1.  Create virtual environment:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    ```
 
-### 4. Dokploy Deployment
+2.  Run server:
+    ```bash
+    export PYTHONPATH=$(pwd)/src
+    fastmcp run src/server.py --transport sse --host 0.0.0.0 --port 8000
+    ```
 
-1.  Push this repository to your Git provider (GitHub, GitLab, etc.).
-2.  In Dokploy, create a new **Application**.
-3.  Select your repository and branch.
-4.  **Build Type**: Dockerfile.
-5.  **Environment Variables**: Add your `GOOGLE_API_KEY`, `MOCK_GOOGLE_API=false`, `TRANSPORT=sse`.
-6.  **Port**: Map internal port `8000` to your desired external port/domain.
-7.  Deploy.
+3.  Access at `http://localhost:8000/sse`.
 
 ## Project Structure
 
-- `src/server.py`: Entry point. Initializes the FastMCP server.
-- `src/tools/`: Contains tool implementations.
-    - `google_nearby.py`: Logic for Google Places API interaction.
+- `src/server.py`: Entry point. Initializes FastMCP.
+- `src/tools/`:
+    - `google_nearby.py`: Google Places API logic.
+    - `geocoding.py`: Address to coordinates logic.
+    - `weather.py`: Meteoblue weather logic.
+- `nginx/`:
+    - `nginx.conf.template`: Nginx configuration template with Auth logic.
+- `docker-compose.yml`: Orchestration for Python + Nginx.
 
-## Logic Flow
+## Dokploy Deployment
 
-1.  **Geocoding (Optional)**: If the agent has a place name, it calls `get_coordinates` to get latitude/longitude.
-2.  **Search Request**: Agent sends a request to `search_nearby` tool with `latitude`, `longitude`, `radius`, and `keyword`.
-3.  **Mock Check**: System checks `MOCK_GOOGLE_API`.
-    - If `true`: Returns hardcoded fake data.
-    - If `false`: Calls Google Maps API.
-4.  **Response**: Formats the list of places into a human-readable string and returns it to the agent.
-# mcp-hotels
+1.  Push this repository to your Git provider.
+2.  In Dokploy, create a new **Application** (Docker Compose).
+3.  Set the Environment Variables in Dokploy (`GOOGLE_API_KEY`, `MCP_AUTH_TOKEN`, etc.).
+4.  **Important:** Map the external port (e.g., domain) to internal container port **8080** (Nginx), NOT 8000.

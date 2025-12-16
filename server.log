@@ -1,12 +1,6 @@
-2025-12-15 15:33:44,364 - __main__ - INFO - Initializing FastMCP server...
-2025-12-15 15:33:44,367 - __main__ - INFO - Tool 'search_nearby' registered successfully
-2025-12-15 15:33:44,367 - __main__ - INFO - Starting MCP Server with transport: sse
-2025-12-15 15:33:44,367 - __main__ - INFO - Environment variables:
-2025-12-15 15:33:44,367 - __main__ - INFO -   TRANSPORT=sse
-2025-12-15 15:33:44,367 - __main__ - INFO -   HOST=0.0.0.0
-2025-12-15 15:33:44,367 - __main__ - INFO -   PORT=8000
-2025-12-15 15:33:44,367 - __main__ - INFO - Starting SSE server on 0.0.0.0:8000
-2025-12-15 15:33:44,367 - __main__ - INFO - SSE endpoint will be available at: http://0.0.0.0:8000/sse
+/Users/netraluis/projects/theAgentsLabs/chat-hoteles/mcp-google-nearby/venv/lib/python3.13/site-packages/fastmcp/server/server.py:304: DeprecationWarning: Providing `debug` when creating a server is deprecated. Provide it when calling `run` or as a global setting instead.
+  self._handle_deprecated_settings(
+INFO:server_module:Tool 'search_nearby' registered successfully
 
 
 ╭──────────────────────────────────────────────────────────────────────────────╮
@@ -17,83 +11,28 @@
 │                                FastMCP 2.14.0                                │
 │                                                                              │
 │                                                                              │
-│                   🖥  Server name: Google Nearby Search MCP                   │
+│                  🖥  Server name: Google Nearby Search MCP                    │
 │                                                                              │
-│                   📦 Transport:   SSE                                        │
-│                   🔗 Server URL:  http://0.0.0.0:8000/sse                    │
+│                  📦 Transport:   SSE                                         │
+│                  🔗 Server URL:  http://127.0.0.1:8000/sse                   │
 │                                                                              │
-│                   📚 Docs:        https://gofastmcp.com                      │
-│                   🚀 Hosting:     https://fastmcp.cloud                      │
+│                  📚 Docs:        https://gofastmcp.com                       │
+│                  🚀 Hosting:     https://fastmcp.cloud                       │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 
 
-[12/15/25 15:33:44] INFO     Starting MCP server 'Google Nearby   server.py:2582
+[12/15/25 23:54:08] INFO     Starting MCP server 'Google Nearby   server.py:2582
                              Search MCP' with transport 'sse' on                
-                             http://0.0.0.0:8000/sse                            
-INFO:     Started server process [70023]
+                             http://127.0.0.1:8000/sse                          
+INFO:     Started server process [656]
 INFO:     Waiting for application startup.
-2025-12-15 15:33:44,408 - docket.worker - INFO - Starting worker 'netraluis.local#70023' with the following tasks:
-2025-12-15 15:33:44,408 - docket.worker - INFO - * trace(message: str, ...)
-2025-12-15 15:33:44,408 - docket.worker - INFO - * fail(message: str, ...)
-2025-12-15 15:33:44,408 - docket.worker - INFO - * sleep(seconds: float, ...)
+INFO:docket.worker:Starting worker 'netraluis.local#656' with the following tasks:
+INFO:docket.worker:* trace(message: str, ...)
+INFO:docket.worker:* fail(message: str, ...)
+INFO:docket.worker:* sleep(seconds: float, ...)
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:50829 - "GET /sse HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50836 - "GET /sse HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50854 - "GET /sse HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50860 - "GET /sse HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50862 - "POST /messages/?session_id=a14b2d303e12414f810d9ce0dda27fcd HTTP/1.1" 202 Accepted
-INFO:     127.0.0.1:50862 - "POST /messages/?session_id=a14b2d303e12414f810d9ce0dda27fcd HTTP/1.1" 202 Accepted
-INFO:     127.0.0.1:50862 - "POST /messages/?session_id=a14b2d303e12414f810d9ce0dda27fcd HTTP/1.1" 202 Accepted
-2025-12-15 15:34:43,887 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
-INFO:     127.0.0.1:50862 - "POST /messages/?session_id=a14b2d303e12414f810d9ce0dda27fcd HTTP/1.1" 202 Accepted
-2025-12-15 15:34:43,890 - mcp.server.lowlevel.server - INFO - Processing request of type CallToolRequest
-2025-12-15 15:34:43,890 - __main__ - INFO - search_nearby called: lat=42.55192485018038, lng=1.5123403642939872, radius=500, keyword=restaurant
-[12/15/25 15:34:43] Error calling tool 'search_nearby'                          
-                    ╭─────────── Traceback (most recent call last) ────────────╮
-                    │ /Users/netraluis/projects/theAgentsLabs/chat-hoteles/mcp │
-                    │ -google-nearby/venv/lib/python3.13/site-packages/fastmcp │
-                    │ /tools/tool_manager.py:160 in call_tool                  │
-                    │                                                          │
-                    │ /Users/netraluis/projects/theAgentsLabs/chat-hoteles/mcp │
-                    │ -google-nearby/venv/lib/python3.13/site-packages/fastmcp │
-                    │ /tools/tool.py:383 in run                                │
-                    │                                                          │
-                    │                 ... 1 frames hidden ...                  │
-                    │                                                          │
-                    │ /Users/netraluis/projects/theAgentsLabs/chat-hoteles/mcp │
-                    │ -google-nearby/src/server.py:29 in search_nearby         │
-                    │                                                          │
-                    │   26 │   │   keyword: Type of place to search for (defau │
-                    │   27 │   """                                             │
-                    │   28 │   logger.info(f"search_nearby called: lat={latitu │
-                    │      radius={radius}, keyword={keyword}")                │
-                    │ ❱ 29 │   results = get_nearby_places(latitude, longitude │
-                    │   30 │                                                   │
-                    │   31 │   # Format results as a readable string           │
-                    │   32 │   if not results:                                 │
-                    │                                                          │
-                    │ /Users/netraluis/projects/theAgentsLabs/chat-hoteles/mcp │
-                    │ -google-nearby/src/tools/google_nearby.py:59 in          │
-                    │ get_nearby_places                                        │
-                    │                                                          │
-                    │   56 │   # Real API Call                                 │
-                    │   57 │   key = api_key or os.environ.get("GOOGLE_API_KEY │
-                    │   58 │   if not key:                                     │
-                    │ ❱ 59 │   │   raise ValueError("Google API Key is require │
-                    │      provide it.")                                       │
-                    │   60 │                                                   │
-                    │   61 │   try:                                            │
-                    │   62 │   │   gmaps = googlemaps.Client(key=key)          │
-                    ╰──────────────────────────────────────────────────────────╯
-                    ValueError: Google API Key is required. Set GOOGLE_API_KEY  
-                    env var or provide it.                                      
-INFO:     127.0.0.1:52972 - "GET /sse HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52974 - "POST /messages/?session_id=7f5af2adfd91452b82ab8771622cb74f HTTP/1.1" 202 Accepted
-INFO:     127.0.0.1:52974 - "POST /messages/?session_id=7f5af2adfd91452b82ab8771622cb74f HTTP/1.1" 202 Accepted
-INFO:     127.0.0.1:52974 - "POST /messages/?session_id=7f5af2adfd91452b82ab8771622cb74f HTTP/1.1" 202 Accepted
-2025-12-15 17:19:19,939 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
-INFO:     127.0.0.1:52974 - "POST /messages/?session_id=7f5af2adfd91452b82ab8771622cb74f HTTP/1.1" 202 Accepted
-2025-12-15 17:19:19,941 - mcp.server.lowlevel.server - INFO - Processing request of type CallToolRequest
-2025-12-15 17:19:19,941 - mcp.server.lowlevel.server - WARNING - Tool 'get_coordinates' not listed, no validation will be performed
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:60809 - "GET /sse HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60811 - "POST /messages/?session_id=118ace6eae6e480e993952b1fb203af2 HTTP/1.1" 202 Accepted
+WARNING:root:Failed to validate request: ASGIAuthMiddleware.__init__() got an unexpected keyword argument 'call_next'
