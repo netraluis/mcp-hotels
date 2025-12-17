@@ -97,36 +97,37 @@ class WeatherService:
             lines.append(f"Location: {location}")
 
             # 2. Daily Max/Min (Today)
-            if "data_day" in weather_data:
-                day = weather_data["data_day"]
-                max_t = day.get("temperature_max", ["N/A"])[0]
-                min_t = day.get("temperature_min", ["N/A"])[0]
-                lines.append(f"Day Max: {max_t}°C | Day Min: {min_t}°C")
+            day = weather_data.get("data_day", {})
+            max_t = day.get("temperature_max", ["N/A"])[0] if day.get("temperature_max") else "N/A"
+            min_t = day.get("temperature_min", ["N/A"])[0] if day.get("temperature_min") else "N/A"
+            lines.append(f"Day Max: {max_t}°C | Day Min: {min_t}°C")
 
             # 3. Current Conditions
-            if "data_1h" in weather_data:
-                d1h = weather_data["data_1h"]
-                curr_temp = d1h.get("temperature", [0])[0]
-                curr_wind = d1h.get("windspeed", [0])[0]
-                curr_code = d1h.get("pictocode", [1])[0]
-                
-                curr_img = self._get_image_for_condition(curr_code, curr_wind)
-                lines.append(f"Current Temp: {curr_temp}°C")
-                lines.append(f"Current Condition: {curr_img}")
-                
-                # 4. Hourly Forecast
-                lines.append("\nForecast (Next 5 Hours):")
-                for i in range(1, 6):
-                    if i < len(d1h.get("temperature", [])):
-                        f_temp = d1h["temperature"][i]
-                        f_wind = d1h["windspeed"][i]
-                        f_code = d1h["pictocode"][i]
-                        f_img = self._get_image_for_condition(f_code, f_wind)
-                        lines.append(f"+{i}h: {f_temp}°C [{f_img}]")
+            d1h = weather_data.get("data_1h", {})
+            curr_temp = d1h.get("temperature", [0])[0] if d1h.get("temperature") else 0
+            curr_wind = d1h.get("windspeed", [0])[0] if d1h.get("windspeed") else 0
+            curr_code = d1h.get("pictocode", [1])[0] if d1h.get("pictocode") else 1
             
-            if not lines:
-                return "No weather data available."
-                
+            curr_img = self._get_image_for_condition(curr_code, curr_wind)
+            lines.append(f"Current Temp: {curr_temp}°C")
+            lines.append(f"Current Condition: {curr_img}")
+            
+            # 4. Hourly Forecast
+            lines.append("\nForecast (Next 5 Hours):")
+            temperatures = d1h.get("temperature", [])
+            windspeeds = d1h.get("windspeed", [])
+            pictocodes = d1h.get("pictocode", [])
+            
+            for i in range(1, 6):
+                if i < len(temperatures):
+                    f_temp = temperatures[i]
+                    f_wind = windspeeds[i] if i < len(windspeeds) else 0
+                    f_code = pictocodes[i] if i < len(pictocodes) else 1
+                    f_img = self._get_image_for_condition(f_code, f_wind)
+                    lines.append(f"+{i}h: {f_temp}°C [{f_img}]")
+                else:
+                    lines.append(f"+{i}h: N/A")
+            
             return "\n".join(lines)
 
         except Exception as e:
