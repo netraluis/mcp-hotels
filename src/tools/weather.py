@@ -130,3 +130,6 @@ class WeatherService:
 
         except Exception as e:
             return f"Error formatting weather data: {str(e)}"
+
+# Create a singleton instance for use in the server
+weather_service = WeatherService()
