@@ -76,14 +76,14 @@ class WeatherService:
     def _get_image_for_condition(self, pictocode: int, windspeed: float) -> str:
         """Map meteoblue condition to specific image filenames"""
         if windspeed > 30: 
-            return "windy.png"
+            return "https://cdn.openai.com/API/storybook/windy.png"
         
         if pictocode <= 3:
-            return "mostly-sunny.png"
+            return "https://cdn.openai.com/API/storybook/mostly-sunny.png"
         elif pictocode <= 8:
-            return "mixed-sun.png"
+            return "https://cdn.openai.com/API/storybook/mixed-sun.png"
         else:
-            return "rain.png"
+            return "https://cdn.openai.com/API/storybook/rain.png"
 
     def format_weather_for_context(self, weather_data: Dict[str, Any]) -> str:
         """Format weather data with images and forecast"""
