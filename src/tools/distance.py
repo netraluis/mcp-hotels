@@ -1,5 +1,6 @@
 import os
 import googlemaps
+import urllib.parse
 from typing import Dict, Any, Optional, Union
 
 def calculate_distance(
@@ -21,10 +22,18 @@ def calculate_distance(
         A readable string with distance and duration, or an error message.
     """
     
+    # Generate Google Maps Link (for both mock and real)
+    safe_origin = urllib.parse.quote(origin)
+    safe_dest = urllib.parse.quote(destination)
+    map_link = f"https://www.google.com/maps/dir/?api=1&origin={safe_origin}&destination={safe_dest}&travelmode={mode}"
+
     # Check for Mocking
     mock_env = os.environ.get("MOCK_GOOGLE_API", "false").lower()
     if mock_env == "true":
-        return f"Mock Distance: 5.2 km (Time: 15 mins) via {mode} from '{origin}' to '{destination}'"
+        return (
+            f"Mock Distance: 5.2 km (Time: 15 mins) via {mode} from '{origin}' to '{destination}'\n"
+            f"Map Link: {map_link}"
+        )
 
     # Real API Call
     key = api_key or os.environ.get("GOOGLE_API_KEY")
@@ -35,7 +44,6 @@ def calculate_distance(
         gmaps = googlemaps.Client(key=key)
         
         # Distance Matrix API call
-        # It handles converting addresses/names to coords automatically
         result = gmaps.distance_matrix(
             origins=[origin],
             destinations=[destination],
@@ -48,7 +56,10 @@ def calculate_distance(
             if element['status'] == 'OK':
                 dist_text = element['distance']['text']
                 duration_text = element['duration']['text']
-                return f"Distance: {dist_text}, Duration: {duration_text} (Mode: {mode})"
+                return (
+                    f"Distance: {dist_text}, Duration: {duration_text} (Mode: {mode})\n"
+                    f"Map Link: {map_link}"
+                )
             else:
                 return f"Could not calculate distance: {element['status']}"
         else:
