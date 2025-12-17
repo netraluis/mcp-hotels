@@ -45,12 +45,13 @@ class WeatherService:
                 return entry["data"]
         
         try:
+            # Meteoblue automatically determines altitude from coordinates
+            # No need to pass 'asl' parameter - it will use the correct elevation
             url = f"{self.base_url}/basic-1h_basic-day"
             params = {
                 "apikey": self.api_key,
                 "lat": latitude,
                 "lon": longitude,
-                "asl": 0,
                 "format": "json"
             }
             
