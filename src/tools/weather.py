@@ -1,29 +1,32 @@
 import httpx
 import os
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 class WeatherService:
     def __init__(self):
         self.api_key = os.environ.get("METEOBLUE_API_KEY")
         self.base_url = "https://my.meteoblue.com/packages"
-        self.cache: Optional[Dict[str, Any]] = None
-        self.cache_timestamp: Optional[float] = None
+        # Cache structure: { "lat,lon": { "data": ..., "timestamp": ... } }
+        self.cache: Dict[str, Dict[str, Any]] = {}
         self.cache_ttl = 3600  # 1 hour cache
     
     async def get_weather(self, latitude: float, longitude: float) -> Dict[str, Any]:
         """Get current weather and forecast from meteoblue API"""
         
+        cache_key = f"{latitude},{longitude}"
+
         # MOCK SUPPORT
         mock_env = os.environ.get("MOCK_WEATHER_API", "false").lower()
         if mock_env == "true":
+             # Return random-ish data based on coords to show variation if needed
              return {
                 "metadata": {"name": "Mock City"},
                 "data_1h": {
                     "time": ["2023-10-27 12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
                     "temperature": [22.5, 23.0, 22.0, 21.0, 20.0, 19.0],
                     "windspeed": [15.0, 10.0, 45.0, 12.0, 10.0, 10.0],
-                    "pictocode": [1, 2, 4, 12, 1, 1] # Sunny, Sunny, Cloudy, Rain, Sunny, Sunny
+                    "pictocode": [1, 2, 4, 12, 1, 1] 
                 },
                 "data_day": {
                     "time": ["2023-10-27"],
@@ -36,9 +39,10 @@ class WeatherService:
              raise ValueError("Meteoblue API Key is required. Set METEOBLUE_API_KEY env var.")
 
         # Check cache
-        if self.cache and self.cache_timestamp:
-            if time.time() - self.cache_timestamp < self.cache_ttl:
-                return self.cache
+        if cache_key in self.cache:
+            entry = self.cache[cache_key]
+            if time.time() - entry["timestamp"] < self.cache_ttl:
+                return entry["data"]
         
         try:
             url = f"{self.base_url}/basic-1h_basic-day"
@@ -55,26 +59,23 @@ class WeatherService:
                 response.raise_for_status()
                 data = response.json()
                 
-                self.cache = data
-                self.cache_timestamp = time.time()
+                # Update cache
+                self.cache[cache_key] = {
+                    "data": data,
+                    "timestamp": time.time()
+                }
                 
                 return data
         except Exception as e:
-            if self.cache: return self.cache
+            # Return cached data if available (expired) as fallback
+            if cache_key in self.cache:
+                return self.cache[cache_key]["data"]
             raise RuntimeError(f"Error fetching weather data: {str(e)}")
     
     def _get_image_for_condition(self, pictocode: int, windspeed: float) -> str:
         """Map meteoblue condition to specific image filenames"""
-        # Priority: Wind > Rain > Cloud > Sun
-        
-        if windspeed > 30: # Threshold for "Windy"
+        if windspeed > 30: 
             return "windy.png"
-            
-        # Meteoblue pictocodes (roughly)
-        # 1-3: Sunny/Clear
-        # 4-8: Cloudy/Overcast
-        # 9-17: Rain/Snow/Fog
-        # >17: Storms/Mixed
         
         if pictocode <= 3:
             return "mostly-sunny.png"
@@ -104,7 +105,6 @@ class WeatherService:
             # 3. Current Conditions
             if "data_1h" in weather_data:
                 d1h = weather_data["data_1h"]
-                # Index 0 is current hour
                 curr_temp = d1h.get("temperature", [0])[0]
                 curr_wind = d1h.get("windspeed", [0])[0]
                 curr_code = d1h.get("pictocode", [1])[0]
@@ -113,11 +113,9 @@ class WeatherService:
                 lines.append(f"Current Temp: {curr_temp}°C")
                 lines.append(f"Current Condition: {curr_img}")
                 
-                # 4. Hourly Forecast (Next 5 hours)
+                # 4. Hourly Forecast
                 lines.append("\nForecast (Next 5 Hours):")
-                # Loop from index 1 (next hour) to 5
                 for i in range(1, 6):
-                    # Safety check for list length
                     if i < len(d1h.get("temperature", [])):
                         f_temp = d1h["temperature"][i]
                         f_wind = d1h["windspeed"][i]
@@ -132,6 +130,3 @@ class WeatherService:
 
         except Exception as e:
             return f"Error formatting weather data: {str(e)}"
-
-# Singleton instance
-weather_service = WeatherService()
