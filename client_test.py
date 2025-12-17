@@ -1,8 +1,12 @@
 import asyncio
 import re
 import os
+from dotenv import load_dotenv
 from mcp.client.sse import sse_client
 from mcp.client.session import ClientSession
+
+# Load environment variables from .env file
+load_dotenv()
 
 async def main():
     # URL of the SSE endpoint
@@ -50,32 +54,49 @@ async def main():
                 
                 if lat_match and lng_match:
                     lat = float(lat_match.group(1))
-                    lng = float(lat_match.group(1))
+                    lng = float(lng_match.group(1))
                     print(f"-> Parsed: Lat={lat}, Lng={lng}")
                     
                     # 2. Test Nearby Search
-                    print(f"\n--- 2. Testing 'search_nearby' around {target_place} ---")
-                    search_args = {
-                        "latitude": lat, 
-                        "longitude": lng,
-                        "radius": 500,
-                        "keyword": "pizza"
-                    }
-                    print(f"Calling tool with args: {search_args}")
+                    # print(f"\n--- 2. Testing 'search_nearby' around {target_place} ---")
+                    # search_args = {
+                    #     "latitude": lat, 
+                    #     "longitude": lng,
+                    #     "radius": 500,
+                    #     "keyword": "pizza"
+                    # }
+                    # print(f"Calling tool with args: {search_args}")
                     
-                    search_result = await session.call_tool("search_nearby", arguments=search_args)
-                    print("\n--- Search Result ---")
-                    for content in search_result.content:
-                        print(content.text)
+                    # search_result = await session.call_tool("search_nearby", arguments=search_args)
+                    # print("\n--- Search Result ---")
+                    # for content in search_result.content:
+                    #     print(content.text)
 
                     # 3. Test Weather
-                    print(f"\n--- 3. Testing 'get_weather' for ({lat}, {lng}) ---")
-                    weather_args = {"latitude": lat, "longitude": lng}
-                    print(f"Calling tool with args: {weather_args}")
+                    # print(f"\n--- 3. Testing 'get_weather' for ({lat}, {lng}) ---")
+                    # weather_args = {"latitude": lat, "longitude": lng}
+                    # print(f"Calling tool with args: {weather_args}")
                     
-                    weather_result = await session.call_tool("get_weather", arguments=weather_args)
-                    print("\n--- Weather Result ---")
-                    for content in weather_result.content:
+                    # weather_result = await session.call_tool("get_weather", arguments=weather_args)
+                    # print("\n--- Weather Result ---")
+                    # for content in weather_result.content:
+                    #     print(content.text)
+
+                    # 4. Test Distance
+                    print(f"\n--- 4. Testing 'calculate_travel_distance' ---")
+                    origin = f"{lat},{lng}" # Use previous coords
+                    destination = "Statue of Liberty, NY"
+                    print(f"Calculating from {origin} to {destination}...")
+                    
+                    dist_args = {
+                        "origin": origin,
+                        "destination": destination,
+                        "mode": "transit"
+                    }
+                    
+                    dist_result = await session.call_tool("calculate_travel_distance", arguments=dist_args)
+                    print("\n--- Distance Result ---")
+                    for content in dist_result.content:
                         print(content.text)
 
                 else:

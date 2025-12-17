@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 from tools.google_nearby import get_nearby_places
 from tools.geocoding import geocode_address
 from tools.weather import weather_service
+from tools.distance import calculate_distance
 import os
 import logging # Mantener para logs generales del servidor
 
@@ -19,6 +20,15 @@ mcp = FastMCP(
 
 # --- OLD AUTHENTICATION MIDDLEWARE REMOVED ---
 # La clase ASGIAuthMiddleware y su registro han sido eliminados.
+
+@mcp.tool()
+def calculate_travel_distance(origin: str, destination: str, mode: str = "driving") -> str:
+    """
+    Calculate the travel distance and time between two points (addresses or coordinates).
+    Modes: "driving", "walking", "bicycling", "transit".
+    """
+    logger.info(f"Calculating distance from '{origin}' to '{destination}' via {mode}")
+    return calculate_distance(origin, destination, mode)
 
 @mcp.tool()
 async def get_weather(latitude: float, longitude: float) -> str:

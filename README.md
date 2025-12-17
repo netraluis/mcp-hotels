@@ -8,6 +8,7 @@ It includes a robust **Nginx Sidecar** for Bearer Token Authentication, ensuring
 
 - **Google Nearby Search Tool**: Find places by coordinates, radius, and keyword.
 - **Geocoding Tool**: Convert addresses (e.g., "Eiffel Tower") into coordinates.
+- **Distance Matrix Tool**: Calculate travel time and distance between two points.
 - **Weather Tool**: Get current weather and forecast via Meteoblue.
 - **Authentication**: Nginx-based Bearer Token protection (Forward Auth compatible).
 - **Mocking Support**: Disable real API calls for testing/dev using environment variables.
