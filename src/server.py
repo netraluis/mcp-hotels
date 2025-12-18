@@ -36,10 +36,12 @@ async def get_weather(latitude: float, longitude: float) -> str:
     Get the current weather and forecast for a specific location (latitude/longitude).
     Returns a readable string with temperature, wind, etc.
     """
+    logger.info(f"get_weather called with: lat={latitude}, lng={longitude}")
     try:
         data = await weather_service.get_weather(latitude, longitude)
         return weather_service.format_weather_for_context(data)
     except Exception as e:
+        logger.error(f"get_weather error: {e}")
         return f"Failed to get weather: {e}"
 
 @mcp.tool()

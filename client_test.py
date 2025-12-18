@@ -73,31 +73,31 @@ async def main():
                     #     print(content.text)
 
                     # 3. Test Weather
-                    # print(f"\n--- 3. Testing 'get_weather' for ({lat}, {lng}) ---")
-                    # weather_args = {"latitude": lat, "longitude": lng}
-                    # print(f"Calling tool with args: {weather_args}")
+                    print(f"\n--- 3. Testing 'get_weather' for ({lat}, {lng}) ---")
+                    weather_args = {"latitude": lat, "longitude": lng}
+                    print(f"Calling tool with args: {weather_args}")
                     
-                    # weather_result = await session.call_tool("get_weather", arguments=weather_args)
-                    # print("\n--- Weather Result ---")
-                    # for content in weather_result.content:
-                    #     print(content.text)
+                    weather_result = await session.call_tool("get_weather", arguments=weather_args)
+                    print("\n--- Weather Result ---")
+                    for content in weather_result.content:
+                        print(content.text)
 
                     # 4. Test Distance
-                    print(f"\n--- 4. Testing 'calculate_travel_distance' ---")
-                    origin = f"{lat},{lng}" # Use previous coords
-                    destination = "Statue of Liberty, NY"
-                    print(f"Calculating from {origin} to {destination}...")
+                    # print(f"\n--- 4. Testing 'calculate_travel_distance' ---")
+                    # origin = f"{lat},{lng}" # Use previous coords
+                    # destination = "Statue of Liberty, NY"
+                    # print(f"Calculating from {origin} to {destination}...")
                     
-                    dist_args = {
-                        "origin": origin,
-                        "destination": destination,
-                        "mode": "transit"
-                    }
+                    # dist_args = {
+                    #     "origin": origin,
+                    #     "destination": destination,
+                    #     "mode": "transit"
+                    # }
                     
-                    dist_result = await session.call_tool("calculate_travel_distance", arguments=dist_args)
-                    print("\n--- Distance Result ---")
-                    for content in dist_result.content:
-                        print(content.text)
+                    # dist_result = await session.call_tool("calculate_travel_distance", arguments=dist_args)
+                    # print("\n--- Distance Result ---")
+                    # for content in dist_result.content:
+                    #     print(content.text)
 
                 else:
                     print("\nCould not parse coordinates. Skipping dependent tests.")
