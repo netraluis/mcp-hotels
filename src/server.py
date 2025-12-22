@@ -3,6 +3,7 @@ from tools.google_nearby import get_nearby_places
 from tools.geocoding import geocode_address
 from tools.weather import weather_service
 from tools.distance import calculate_distance
+from typing import Optional
 import os
 import logging # Mantener para logs generales del servidor
 
@@ -58,31 +59,90 @@ def get_coordinates(address: str) -> str:
         return str(result)
 
 @mcp.tool()
-def search_nearby(latitude: float, longitude: float, radius: int = 1000, keyword: str = "hotel") -> str:
+def search_nearby(
+    latitude: float,
+    longitude: float,
+    radius: int = 1000,
+    keyword: str = "hotel",
+    type: Optional[str] = None,
+    min_price: Optional[int] = None,
+    max_price: Optional[int] = None,
+    language: Optional[str] = None,
+    rankby: Optional[str] = None,
+    name: Optional[str] = None
+) -> str:
     """
     Search for nearby places (hotels, restaurants, etc.) using Google Maps API.
+    Returns up to 5 results, sorted by rating (descending).
     
     Args:
         latitude: Latitude of the search center.
         longitude: Longitude of the search center.
-        radius: Search radius in meters (default 1000).
+        radius: Search radius in meters (default 1000, ignored if rankby="distance").
         keyword: Type of place to search for (default "hotel").
+        type: Optional specific place type (e.g., "lodging", "restaurant", "cafe").
+        min_price: Optional minimum price level (0-4, where 0=free, 4=very expensive).
+        max_price: Optional maximum price level (0-4, where 0=free, 4=very expensive).
+        language: Optional language code for results (e.g., "es", "en", "fr").
+        rankby: Optional ranking method: "distance" or "prominence" (if "distance", radius is ignored).
+        name: Optional exact name of the place to search for.
     """
-    logger.info(f"search_nearby called: lat={latitude}, lng={longitude}, radius={radius}, keyword={keyword}")
-    results = get_nearby_places(latitude, longitude, radius, keyword)
+    logger.info(f"search_nearby called: lat={latitude}, lng={longitude}, radius={radius}, keyword={keyword}, type={type}, min_price={min_price}, max_price={max_price}, language={language}, rankby={rankby}, name={name}")
+    
+    results = get_nearby_places(
+        latitude=latitude,
+        longitude=longitude,
+        radius=radius,
+        keyword=keyword,
+        type=type,
+        min_price=min_price,
+        max_price=max_price,
+        language=language,
+        rankby=rankby,
+        name=name
+    )
     
     # Format results as a readable string
     if not results:
-        return f"No {keyword}s found near ({latitude}, {longitude})."
+        search_term = keyword or type or "places"
+        return f"No {search_term} found near ({latitude}, {longitude})."
     
-    formatted_results = [f"Found {len(results)} places:\n"]
-    for place in results:
+    formatted_results = [f"Found {len(results)} places (showing top 5 by rating):\n"]
+    for idx, place in enumerate(results, 1):
         name = place.get("name", "Unknown")
-        vicinity = place.get("vicinity", "No address")
+        vicinity = place.get("vicinity", place.get("formatted_address", "No address"))
         rating = place.get("rating", "N/A")
-        formatted_results.append(f"- {name} (Rating: {rating})\n  Address: {vicinity}")
+        user_ratings_total = place.get("user_ratings_total")
+        price_level = place.get("price_level")
+        place_id = place.get("place_id", "")
+        business_status = place.get("business_status", "")
         
-    return "\n".join(formatted_results)
+        # Format price level
+        price_str = ""
+        if price_level is not None:
+            price_symbols = ["Free", "$", "$$", "$$$", "$$$$"]
+            price_str = f" | Price: {price_symbols[price_level] if price_level < len(price_symbols) else 'N/A'}"
+        
+        # Format ratings
+        ratings_str = f"Rating: {rating}"
+        if user_ratings_total:
+            ratings_str += f" ({user_ratings_total} reviews)"
+        
+        # Format business status
+        status_str = ""
+        if business_status:
+            status_str = f" | Status: {business_status}"
+        
+        formatted_results.append(
+            f"{idx}. {name}\n"
+            f"   {ratings_str}{price_str}{status_str}\n"
+            f"   Address: {vicinity}"
+        )
+        if place_id:
+            formatted_results.append(f"   Place ID: {place_id}")
+        formatted_results.append("")  # Empty line between places
+        
+    return "\n".join(formatted_results).strip()
 
 logger.info("Tool 'search_nearby' registered successfully")
 
