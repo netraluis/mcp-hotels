@@ -116,12 +116,20 @@ def search_nearby(
         price_level = place.get("price_level")
         place_id = place.get("place_id", "")
         business_status = place.get("business_status", "")
+        photo_url = place.get("photo_url", "")
         
-        # Format price level
+        # Format price level with clear dollar signs
         price_str = ""
         if price_level is not None:
-            price_symbols = ["Free", "$", "$$", "$$$", "$$$$"]
-            price_str = f" | Price: {price_symbols[price_level] if price_level < len(price_symbols) else 'N/A'}"
+            # Price levels: 0=Free, 1=Inexpensive, 2=Moderate, 3=Expensive, 4=Very Expensive
+            price_display = {
+                0: "Free",
+                1: "$ (Inexpensive)",
+                2: "$$ (Moderate)",
+                3: "$$$ (Expensive)",
+                4: "$$$$ (Very Expensive)"
+            }
+            price_str = f" | Price: {price_display.get(price_level, 'N/A')}"
         
         # Format ratings
         ratings_str = f"Rating: {rating}"
@@ -138,6 +146,8 @@ def search_nearby(
             f"   {ratings_str}{price_str}{status_str}\n"
             f"   Address: {vicinity}"
         )
+        if photo_url:
+            formatted_results.append(f"   Photo: {photo_url}")
         if place_id:
             formatted_results.append(f"   Place ID: {place_id}")
         formatted_results.append("")  # Empty line between places

@@ -2,6 +2,20 @@ import os
 import googlemaps
 from typing import List, Dict, Any, Optional
 
+def get_photo_url(photo_reference: str, api_key: str, max_width: int = 400) -> str:
+    """
+    Generate a URL for a place photo using the photo_reference.
+    
+    Args:
+        photo_reference: The photo reference from the places API response.
+        api_key: Google Maps API key.
+        max_width: Maximum width of the photo in pixels (default 400).
+        
+    Returns:
+        URL string to access the photo.
+    """
+    return f"https://maps.googleapis.com/maps/api/place/photo?maxwidth={max_width}&photoreference={photo_reference}&key={api_key}"
+
 def get_nearby_places(
     latitude: float,
     longitude: float,
@@ -49,6 +63,7 @@ def get_nearby_places(
         - types: List[str] - Place types/categories
         - opening_hours: dict - Opening hours information (if available)
         - photos: List[dict] - Photo references (if available)
+        - photo_url: str - Direct URL to the first photo (if available, generated from photo_reference)
         - business_status: str - Business status (e.g., "OPERATIONAL")
         And other optional fields depending on data availability.
     """
@@ -91,6 +106,7 @@ def get_nearby_places(
                         "height": 600
                     }
                 ],
+                "photo_url": "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=mock_photo_ref_1&key=mock_key",
                 "business_status": "OPERATIONAL"
             },
             {
@@ -127,6 +143,7 @@ def get_nearby_places(
                         "height": 600
                     }
                 ],
+                "photo_url": "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=mock_photo_ref_2&key=mock_key",
                 "business_status": "OPERATIONAL"
             },
             {
@@ -206,6 +223,17 @@ def get_nearby_places(
             }
         ]
         
+        # Add photo URLs to mock places (using mock API key)
+        mock_key = os.environ.get("GOOGLE_API_KEY", "mock_key")
+        for place in mock_places:
+            photos = place.get('photos', [])
+            if photos and len(photos) > 0:
+                # Select the photo with the highest resolution (width * height)
+                best_photo = max(photos, key=lambda p: p.get('width', 0) * p.get('height', 0))
+                photo_ref = best_photo.get('photo_reference')
+                if photo_ref:
+                    place['photo_url'] = get_photo_url(photo_ref, mock_key, max_width=400)
+        
         # Sort by rating descending and limit to 5
         sorted_mock = sorted(mock_places, key=lambda x: x.get('rating', 0), reverse=True)
         return sorted_mock[:5]
@@ -265,11 +293,31 @@ def get_nearby_places(
         # Get results list
         places = results.get('results', [])
         
+        # Debug: Log how many results API returned
+        print(f"Google Places API returned {len(places)} results")
+        
+        # Add photo URLs to places that have photos
+        for place in places:
+            photos = place.get('photos', [])
+            if photos and len(photos) > 0:
+                # Select the photo with the highest resolution (width * height)
+                # This ensures we get the best quality photo available
+                best_photo = max(photos, key=lambda p: p.get('width', 0) * p.get('height', 0))
+                photo_ref = best_photo.get('photo_reference')
+                if photo_ref:
+                    # Add photo_url to the place data
+                    place['photo_url'] = get_photo_url(photo_ref, key, max_width=400)
+                    # Also keep original photo data
+                    place['photo_reference'] = photo_ref
+        
         # Sort by rating (descending), handling None ratings as 0
         sorted_places = sorted(places, key=lambda x: x.get('rating', 0) or 0, reverse=True)
         
         # Limit to 5 results (API returns up to 20, but we limit to save credits)
-        return sorted_places[:5]
+        # Always return up to 5, even if API returned fewer
+        limited_places = sorted_places[:5]
+        print(f"Returning {len(limited_places)} places (limited from {len(sorted_places)})")
+        return limited_places
         
     except Exception as e:
         print(f"Error querying Google Maps API: {e}")
