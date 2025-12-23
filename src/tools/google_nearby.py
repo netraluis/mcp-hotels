@@ -374,7 +374,7 @@ def get_nearby_places(
         
         # Limit to 5 results (API returns up to 20, but we limit to save credits)
         # Always return up to 5, even if API returned fewer
-        limited_places = sorted_places[:5]
+        limited_places = sorted_places[:3]
         print(f"Returning {len(limited_places)} places (limited from {len(sorted_places)})")
         return limited_places
         
