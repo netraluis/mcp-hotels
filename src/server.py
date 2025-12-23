@@ -113,23 +113,10 @@ def search_nearby(
         vicinity = place.get("vicinity", place.get("formatted_address", "No address"))
         rating = place.get("rating", "N/A")
         user_ratings_total = place.get("user_ratings_total")
-        price_level = place.get("price_level")
         place_id = place.get("place_id", "")
         business_status = place.get("business_status", "")
         photo_url = place.get("photo_url", "")
-        
-        # Format price level with clear dollar signs
-        price_str = ""
-        if price_level is not None:
-            # Price levels: 0=Free, 1=Inexpensive, 2=Moderate, 3=Expensive, 4=Very Expensive
-            price_display = {
-                0: "Free",
-                1: "$ (Inexpensive)",
-                2: "$$ (Moderate)",
-                3: "$$$ (Expensive)",
-                4: "$$$$ (Very Expensive)"
-            }
-            price_str = f" | Price: {price_display.get(price_level, 'N/A')}"
+        maps_url = place.get("maps_url", "")
         
         # Format ratings
         ratings_str = f"Rating: {rating}"
@@ -143,9 +130,11 @@ def search_nearby(
         
         formatted_results.append(
             f"{idx}. {name}\n"
-            f"   {ratings_str}{price_str}{status_str}\n"
+            f"   {ratings_str}{status_str}\n"
             f"   Address: {vicinity}"
         )
+        if maps_url:
+            formatted_results.append(f"   View on Google Maps: {maps_url}")
         if photo_url:
             formatted_results.append(f"   Photo: {photo_url}")
         if place_id:

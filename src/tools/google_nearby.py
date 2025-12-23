@@ -16,6 +16,37 @@ def get_photo_url(photo_reference: str, api_key: str, max_width: int = 400) -> s
     """
     return f"https://maps.googleapis.com/maps/api/place/photo?maxwidth={max_width}&photoreference={photo_reference}&key={api_key}"
 
+def get_google_maps_url(place_id: str = None, latitude: float = None, longitude: float = None, name: str = None) -> str:
+    """
+    Generate a Google Maps URL for a place.
+    
+    Args:
+        place_id: Place ID (preferred method).
+        latitude: Latitude of the place.
+        longitude: Longitude of the place.
+        name: Name of the place (used as fallback).
+        
+    Returns:
+        URL string to open the place in Google Maps.
+    """
+    if place_id:
+        # Best method: use place_id for direct link
+        return f"https://www.google.com/maps/place/?q=place_id:{place_id}"
+    elif latitude is not None and longitude is not None:
+        # Fallback: use coordinates
+        if name:
+            # Include name in search for better results
+            encoded_name = name.replace(' ', '+')
+            return f"https://www.google.com/maps/search/?api=1&query={encoded_name}&query_place_id={place_id}" if place_id else f"https://www.google.com/maps/search/?api=1&query={latitude},{longitude}"
+        else:
+            return f"https://www.google.com/maps/search/?api=1&query={latitude},{longitude}"
+    else:
+        # Last resort: search by name
+        if name:
+            encoded_name = name.replace(' ', '+')
+            return f"https://www.google.com/maps/search/?api=1&query={encoded_name}"
+        return ""
+
 def get_nearby_places(
     latitude: float,
     longitude: float,
@@ -223,7 +254,7 @@ def get_nearby_places(
             }
         ]
         
-        # Add photo URLs to mock places (using mock API key)
+        # Add photo URLs and Google Maps URLs to mock places
         mock_key = os.environ.get("GOOGLE_API_KEY", "mock_key")
         for place in mock_places:
             photos = place.get('photos', [])
@@ -233,6 +264,20 @@ def get_nearby_places(
                 photo_ref = best_photo.get('photo_reference')
                 if photo_ref:
                     place['photo_url'] = get_photo_url(photo_ref, mock_key, max_width=400)
+            
+            # Add Google Maps URL for mock places
+            place_id = place.get('place_id')
+            location = place.get('geometry', {}).get('location', {})
+            lat = location.get('lat')
+            lng = location.get('lng')
+            name = place.get('name')
+            
+            place['maps_url'] = get_google_maps_url(
+                place_id=place_id,
+                latitude=lat,
+                longitude=lng,
+                name=name
+            )
         
         # Sort by rating descending and limit to 5
         sorted_mock = sorted(mock_places, key=lambda x: x.get('rating', 0), reverse=True)
@@ -296,7 +341,7 @@ def get_nearby_places(
         # Debug: Log how many results API returned
         print(f"Google Places API returned {len(places)} results")
         
-        # Add photo URLs to places that have photos
+        # Add photo URLs and Google Maps URLs
         for place in places:
             photos = place.get('photos', [])
             if photos and len(photos) > 0:
@@ -309,6 +354,20 @@ def get_nearby_places(
                     place['photo_url'] = get_photo_url(photo_ref, key, max_width=400)
                     # Also keep original photo data
                     place['photo_reference'] = photo_ref
+            
+            # Add Google Maps URL
+            place_id = place.get('place_id')
+            location = place.get('geometry', {}).get('location', {})
+            lat = location.get('lat')
+            lng = location.get('lng')
+            name = place.get('name')
+            
+            place['maps_url'] = get_google_maps_url(
+                place_id=place_id,
+                latitude=lat,
+                longitude=lng,
+                name=name
+            )
         
         # Sort by rating (descending), handling None ratings as 0
         sorted_places = sorted(places, key=lambda x: x.get('rating', 0) or 0, reverse=True)
