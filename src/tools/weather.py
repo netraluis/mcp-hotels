@@ -1,26 +1,35 @@
 import httpx
 import os
 import time
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 
 class WeatherService:
     def __init__(self):
         self.api_key = os.environ.get("METEOBLUE_API_KEY")
         self.base_url = "https://my.meteoblue.com/packages"
-        # Cache structure: { "lat,lon": { "data": ..., "timestamp": ... } }
         self.cache: Dict[str, Dict[str, Any]] = {}
-        self.cache_ttl = 3600  # 1 hour cache
+        self.cache_ttl = 3600
+        self._client: Optional[httpx.AsyncClient] = None
+        self._mock_enabled = os.environ.get("MOCK_WEATHER_API", "false").lower() == "true"
+    
+    async def _get_client(self) -> httpx.AsyncClient:
+        """Get or create persistent HTTP client"""
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=10.0)
+        return self._client
+    
+    async def close(self):
+        """Close HTTP client (call on shutdown)"""
+        if self._client:
+            await self._client.aclose()
+            self._client = None
     
     async def get_weather(self, latitude: float, longitude: float) -> Dict[str, Any]:
         """Get current weather and forecast from meteoblue API"""
-        
         cache_key = f"{latitude},{longitude}"
 
-        # MOCK SUPPORT
-        mock_env = os.environ.get("MOCK_WEATHER_API", "false").lower()
-        if mock_env == "true":
-             # Return random-ish data based on coords to show variation if needed
-             return {
+        if self._mock_enabled:
+            return {
                 "metadata": {"name": "Mock City"},
                 "data_1h": {
                     "time": ["2023-10-27 12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
@@ -36,17 +45,17 @@ class WeatherService:
             }
 
         if not self.api_key:
-             raise ValueError("Meteoblue API Key is required. Set METEOBLUE_API_KEY env var.")
+            raise ValueError("Meteoblue API Key is required. Set METEOBLUE_API_KEY env var.")
 
         # Check cache
+        now = time.time()
         if cache_key in self.cache:
             entry = self.cache[cache_key]
-            if time.time() - entry["timestamp"] < self.cache_ttl:
+            if now - entry["timestamp"] < self.cache_ttl:
                 return entry["data"]
         
         try:
-            # Meteoblue automatically determines altitude from coordinates
-            # No need to pass 'asl' parameter - it will use the correct elevation
+            client = await self._get_client()
             url = f"{self.base_url}/basic-1h_basic-day"
             params = {
                 "apikey": self.api_key,
@@ -55,18 +64,17 @@ class WeatherService:
                 "format": "json"
             }
             
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                
-                # Update cache
-                self.cache[cache_key] = {
-                    "data": data,
-                    "timestamp": time.time()
-                }
-                
-                return data
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            
+            # Update cache
+            self.cache[cache_key] = {
+                "data": data,
+                "timestamp": now
+            }
+            
+            return data
         except Exception as e:
             # Return cached data if available (expired) as fallback
             if cache_key in self.cache:
@@ -91,38 +99,38 @@ class WeatherService:
             lines = []
             
             # 1. Location
-            location = "Unknown Location"
-            if "metadata" in weather_data:
-                location = weather_data["metadata"].get("name", location)
+            metadata = weather_data.get("metadata", {})
+            location = metadata.get("name", "Unknown Location")
             lines.append(f"Location: {location}")
 
             # 2. Daily Max/Min (Today)
             day = weather_data.get("data_day", {})
-            max_t = day.get("temperature_max", ["N/A"])[0] if day.get("temperature_max") else "N/A"
-            min_t = day.get("temperature_min", ["N/A"])[0] if day.get("temperature_min") else "N/A"
+            temp_max = day.get("temperature_max")
+            temp_min = day.get("temperature_min")
+            max_t = temp_max[0] if temp_max else "N/A"
+            min_t = temp_min[0] if temp_min else "N/A"
             lines.append(f"Day Max: {max_t}°C | Day Min: {min_t}°C")
 
             # 3. Current Conditions
             d1h = weather_data.get("data_1h", {})
-            curr_temp = d1h.get("temperature", [0])[0] if d1h.get("temperature") else 0
-            curr_wind = d1h.get("windspeed", [0])[0] if d1h.get("windspeed") else 0
-            curr_code = d1h.get("pictocode", [1])[0] if d1h.get("pictocode") else 1
+            temps = d1h.get("temperature", [])
+            winds = d1h.get("windspeed", [])
+            codes = d1h.get("pictocode", [])
             
+            curr_temp = temps[0] if temps else 0
+            curr_wind = winds[0] if winds else 0
+            curr_code = codes[0] if codes else 1
             curr_img = self._get_image_for_condition(curr_code, curr_wind)
             lines.append(f"Current Temp: {curr_temp}°C")
             lines.append(f"Current Condition: {curr_img}")
             
-            # 4. Hourly Forecast
-            lines.append("\nForecast (Next 5 Hours):")
-            temperatures = d1h.get("temperature", [])
-            windspeeds = d1h.get("windspeed", [])
-            pictocodes = d1h.get("pictocode", [])
-            
-            for i in range(1, 6):
-                if i < len(temperatures):
-                    f_temp = temperatures[i]
-                    f_wind = windspeeds[i] if i < len(windspeeds) else 0
-                    f_code = pictocodes[i] if i < len(pictocodes) else 1
+            # 4. Hourly Forecast - every 2 hours
+            lines.append("\nForecast (Every 2 Hours):")
+            for i in range(2, 12, 2):
+                if i < len(temps):
+                    f_temp = temps[i]
+                    f_wind = winds[i] if i < len(winds) else 0
+                    f_code = codes[i] if i < len(codes) else 1
                     f_img = self._get_image_for_condition(f_code, f_wind)
                     lines.append(f"+{i}h: {f_temp}°C [{f_img}]")
                 else:
